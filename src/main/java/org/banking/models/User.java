@@ -1,6 +1,7 @@
 package org.banking.models;
 
 import jakarta.servlet.http.HttpServletRequest;
+
 import java.security.SecureRandom;
 
 public class User {

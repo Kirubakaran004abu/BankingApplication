@@ -1,14 +1,15 @@
 package org.banking.servlets;
 
-import java.io.*;
-import java.sql.SQLException;
-
-import jakarta.servlet.http.*;
-import jakarta.servlet.annotation.*;
-
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.banking.database.jdbc;
 import org.banking.models.Credential;
-import org.banking.models.User;
+
+import java.io.IOException;
+import java.sql.SQLException;
 
 @WebServlet(name = "loginServlet", value = "/login-servlet")
 public class loginServlet extends HttpServlet {
@@ -19,16 +20,11 @@ public class loginServlet extends HttpServlet {
 
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         jdbc db = new jdbc();
-        String acc = request.getParameter("account_no");
+        int acc = Integer.parseInt(request.getParameter("account_no"));
         String pass = request.getParameter("password");
         HttpSession session = request.getSession();
         try {
-            Credential login = db.checkPassword(Integer.parseInt(acc), pass);
-
-            if (!login.logged_in) {
-                response.sendRedirect("Failure.jsp");
-                return;
-            }
+            Credential login = db.checkPassword(acc, pass);
 
             session.setAttribute("login", login);
 

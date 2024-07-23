@@ -2,9 +2,9 @@ package org.banking.database;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.banking.models.Credential;
+import org.banking.models.Hashing;
 import org.banking.models.Transaction;
 import org.banking.models.User;
-import org.banking.models.Hashing;
 
 import java.sql.*;
 
@@ -16,7 +16,7 @@ public class jdbc {
     public jdbc() {
         try {
             String username = "root";
-            String password = "Tiger.01";
+            String password = "karan004";
             String url = "jdbc:mysql://localhost:3306/banking";
             conn = DriverManager.getConnection(url, username, password);
             statement = conn.createStatement();
@@ -35,7 +35,7 @@ public class jdbc {
 
         try {
             if (Hashing.verifyPassword(resultSet.getString("password"), password)) {
-                System.out.println("Password Matched" + password);
+                System.out.println("Password Matched " + password);
                 return new Credential(resultSet.getString("username"),
                         resultSet.getBoolean("is_admin"),
                         true,

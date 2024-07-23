@@ -1,13 +1,15 @@
 package org.banking.servlets;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.*;
-import jakarta.servlet.annotation.*;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.banking.models.Credential;
 import org.banking.models.Transaction;
+
+import java.io.IOException;
+import java.io.PrintWriter;
 
 @WebServlet("/transaction")
 public class transactionServlet extends HttpServlet{

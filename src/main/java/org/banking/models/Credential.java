@@ -6,8 +6,6 @@ public class Credential {
     public boolean is_admin;
     public boolean logged_in;
 
-    public String[] tabs = {"active", "", "", "", "", ""};
-
     public Credential(String name, boolean admin, boolean logged_in, int accountNumber) {
         this.name = name;
         this.is_admin = admin;

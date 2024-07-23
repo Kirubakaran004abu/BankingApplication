@@ -58,7 +58,7 @@
             transition: background-color 0.3s ease;
         }
         .tabs button:hover {
-            background-color: #0056b3;
+            background-color: #005ccf;
         }
         .tabs button.active {
             background-color: #0056b3;
@@ -270,15 +270,15 @@
                     <label for="address">Address</label>
                     <input type="text" id="modify-address" name="address" placeholder="<%=user.getString("Address")%>"><br>
 
-<%--                    <label for="modify-date-of-birth">Date of Birth</label>--%>
-<%--                    <input type="date" id="modify-date-of-birth" name="date_of_birth" placeholder="<%=user.getDate("date_of_birth")%>"><br>--%>
+                    <label for="modify-date-of-birth">Date of Birth</label>
+                    <input type="date" id="modify-date-of-birth" name="date_of_birth" value="<%=user.getDate("date_of_birth")%>"><br>
 
                     <%
                         if (user.getString("id_proof") == null) {
                     %>
 
                     <label for="modify_ID_Proof">ID Proof:</label>
-                    <select id="modify_ID_Proof" name="id_proof" required>
+                    <select id="modify_ID_Proof" name="id_proof">
                         <option value="" disabled selected>--select--</option>
                         <option value="Aadhaar Card">Aadhaar Card</option>
                         <option value="Driving License">Driving License</option>
