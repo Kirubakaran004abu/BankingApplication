@@ -1,6 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
-<%@ page import="jakarta.servlet.http.*" %>
 <%@ page import="org.banking.models.Credential" %>
 
 <%
@@ -88,20 +87,20 @@
 
         <button>Login</button><br>
 
-        <div id="error-message" style="color: red;"></div>
+        <div id="error-message"></div>
 
     </form>
 
     <%
-        String status = null;
-        status = (String) session.getAttribute("status");
-        session.removeAttribute("status"); // Remove error attribute after displaying
+        String status = (String) session.getAttribute("status");
+        session.removeAttribute("status");
     %>
 
     <script type="text/javascript">
         const error = "<%= status != null ? status : "" %>";
         if (error) {
             document.getElementById("error-message").innerHTML = error;
+            document.getElementById("error-message").style.setProperty("color", "red");
         }
     </script>
 </body>

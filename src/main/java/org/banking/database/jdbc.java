@@ -19,6 +19,7 @@ public class jdbc {
             String password = "karan004";
             String url = "jdbc:mysql://localhost:3306/banking";
             conn = DriverManager.getConnection(url, username, password);
+            conn.setAutoCommit(false);
             statement = conn.createStatement();
 
         } catch (SQLException e) {
@@ -42,10 +43,10 @@ public class jdbc {
                         account_no);
             }
         } catch (SQLException e) {
-            throw new SQLException("Credential Not Found");
+            throw new SQLException("Account doesn't exist");
         }
 
-        throw new SQLException("Password Not Matched");
+        throw new SQLException("Incorrect Password");
     }
 
     public void updatePassword(int account_no, String password) throws SQLException {
@@ -53,6 +54,7 @@ public class jdbc {
         statement.executeUpdate(
                 String.format("UPDATE credintials SET password ='%s' WHERE account_no = %d", password, account_no)
         );
+        conn.commit();
     }
 
     public ResultSet fetchUsers() throws SQLException {
@@ -93,33 +95,28 @@ public class jdbc {
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?);"
         );
 
-        try {
-            insertStatement.setInt(1, user.get_account_number());
-            insertStatement.setString(2, user.get_full_name());
-            insertStatement.setString(3, user.get_mobile());
-            insertStatement.setString(4, user.get_email());
-            insertStatement.setString(5, user.get_date_of_birth());
-            insertStatement.setString(6, user.get_account_type());
-            insertStatement.setString(7, user.get_id_proof());
-            insertStatement.setString(8, user.get_address());
+        insertStatement.setInt(1, user.get_account_number());
+        insertStatement.setString(2, user.get_full_name());
+        insertStatement.setString(3, user.get_mobile());
+        insertStatement.setString(4, user.get_email());
+        insertStatement.setString(5, user.get_date_of_birth());
+        insertStatement.setString(6, user.get_account_type());
+        insertStatement.setString(7, user.get_id_proof());
+        insertStatement.setString(8, user.get_address());
 
-            insertStatement.executeUpdate();
-        } catch (SQLException e) {
-            System.out.println(user.get_account_number() + " " + e.getMessage());
-        }
+        insertStatement.executeUpdate();
+
+        conn.commit();
 
         PreparedStatement updateStatement = conn.prepareStatement("UPDATE credintials SET password = ? WHERE account_no = ?");
 
-        try {
-            updateStatement.setInt(2, user.get_account_number());
-            updateStatement.setString(1, Hashing.hashPassword(user.get_password()));
+        updateStatement.setInt(2, user.get_account_number());
+        updateStatement.setString(1, Hashing.hashPassword(user.get_password()));
 
-            updateStatement.executeUpdate();
-        } catch (SQLException e) {
-            throw new SQLException(e.getMessage());
-        }
+        updateStatement.executeUpdate();
 
         System.out.println(user.get_account_number() + " " + user.get_password());
+        conn.commit();
         return user;
     }
 
@@ -127,8 +124,10 @@ public class jdbc {
         ResultSet rs = statement.executeQuery(
                 "SELECT balance from customers where account_no = " + account_no
         );
-        rs.next();
-        return rs.getDouble("balance");
+        if (rs.next())
+            return rs.getDouble("balance");
+        else
+            throw new SQLException("Account Not Found");
     }
 
     public void updateBalance(int account_no, double amount) throws SQLException {
@@ -146,6 +145,7 @@ public class jdbc {
     public void deleteUser(int account_no) throws SQLException {
         statement.executeUpdate("delete from details where account_no = " + account_no);
         System.out.println("Successfully Deleted User " + account_no);
+        conn.commit();
     }
 
     public boolean checkAccountExist(int account_no) throws SQLException {
@@ -169,8 +169,26 @@ public class jdbc {
         }
 
         statement.executeUpdate("UPDATE details SET " + query.toString() + " WHERE account_no = " + account_no);
-
+        conn.commit();
         System.out.println("UPDATE details SET " + query.toString() + " WHERE account_no = " + account_no);
+    }
+
+    public boolean isVerified(int account_no) throws SQLException {
+        ResultSet rs = statement.executeQuery(
+                "SELECT is_verified FROM customers WHERE account_no = " + account_no
+        );
+        rs.next();
+        return rs.getBoolean("is_verified");
+    }
+
+    public void commit(){
+        try {
+            if (conn != null) {
+                conn.commit();
+            }
+        } catch (SQLException e) {
+            System.out.println("SQL Exception during close: " + e.getMessage());
+        }
     }
 
     public void close() {

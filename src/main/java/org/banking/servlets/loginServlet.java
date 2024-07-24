@@ -24,6 +24,9 @@ public class loginServlet extends HttpServlet {
         String pass = request.getParameter("password");
         HttpSession session = request.getSession();
         try {
+            if (!db.checkAccountExist(acc))
+                throw new SQLException("Account does not exist");
+
             Credential login = db.checkPassword(acc, pass);
 
             session.setAttribute("login", login);

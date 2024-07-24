@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.banking.database.jdbc;
+import org.banking.models.Credential;
 import org.banking.models.User;
 
 import java.io.IOException;
@@ -25,6 +26,7 @@ public class administrationServlet extends HttpServlet {
         switch (action) {
             case "register":
                 try {
+                    session.setAttribute("label", "register-message");
                     User user = db.insertUser(new User(request));
                     response.setContentType("text/plain");
                     response.setHeader("Content-Disposition", "attachment;filename=" + user.get_full_name()+ ".txt");
@@ -35,12 +37,16 @@ public class administrationServlet extends HttpServlet {
                     PrintWriter writer = response.getWriter();
                     writer.println(fileContent);
                     writer.close();
-                    response.sendRedirect("Admin.jsp");
+
+                    session.setAttribute("color", "forestgreen");
+                    session.setAttribute("message", "Registered Successfully");
+
                 } catch (SQLException | InterruptedException e) {
-                    response.getWriter().println(e.getMessage());
-                    throw new RuntimeException(e);
+                    session.setAttribute("color", "red");
+                    session.setAttribute("message", e.getMessage());
                 } finally {
                     db.close();
+                    response.sendRedirect("Admin.jsp");
                 }
                 break;
 
@@ -50,10 +56,14 @@ public class administrationServlet extends HttpServlet {
                 break;
 
             case "modify-post":
+                session.setAttribute("label", "modify-message");
                 try {
                     db.modifyUser(Integer.parseInt((String) session.getAttribute("fetchAccountNo")), request);
+                    session.setAttribute("color", "forestgreen");
+                    session.setAttribute("message", "Details modified successfully");
                 } catch (SQLException e) {
-                    System.out.println(e.getMessage());
+                    session.setAttribute("color", "red");
+                    session.setAttribute("message", e.getMessage());
                 }
                 session.removeAttribute("fetchAccountNo");
                 response.sendRedirect("Admin.jsp");
@@ -62,26 +72,46 @@ public class administrationServlet extends HttpServlet {
             case "delete":
 
                 try {
-                    int id = Integer.parseInt(request.getParameter("account-no"));
+                    int id;
                     String declaration = request.getParameter("declaration");
+                    session.setAttribute("label", "delete-message");
 
-                    if (declaration.equals("delete/" + id) && db.fetchBalance(id) == 0) {
-                        db.deleteUser(id);
-                        response.getWriter().println("Successfully deleted");
+                    Credential login = (Credential) session.getAttribute("login");
+
+                    if (!login.is_admin) {
+                        id = ((Credential) session.getAttribute("login")).accountNumber;
+                        session.setAttribute("color", "red");
+
                     } else {
-                        response.getWriter().println("Deletion failed");
+                        id = Integer.parseInt(request.getParameter("account-no"));
                     }
 
-                } catch (SQLException e) {
-                    response.getWriter().println(e.getMessage());
-                    throw new RuntimeException(e);
+                    if (!declaration.equals("delete/" + id))
+                        throw new RuntimeException("declaration failed");
+
+                    if (db.fetchBalance(id) != 0)
+                        throw new RuntimeException("Balance should be zero");
+
+                    db.deleteUser(id);
+
+                    if (login.is_admin){
+                        session.setAttribute("color", "forestgreen");
+                        throw new RuntimeException("Deleted account successfully");
+                    }
+
+                    session.removeAttribute("label");
+                    session.removeAttribute("color");
+                    response.sendRedirect("removeAttribute");
+
+
+                } catch (RuntimeException | SQLException e) {
+                    session.setAttribute("message", e.getMessage());
+                    response.sendRedirect("customer.jsp");
                 } finally {
                     db.close();
                 }
                 break;
 
         }
-
-
     }
 }

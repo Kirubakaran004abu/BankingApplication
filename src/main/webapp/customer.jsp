@@ -56,7 +56,7 @@
             transition: background-color 0.3s ease;
         }
         .tabs button:hover {
-            background-color: #0056b3;
+            background-color: #005ccf;
         }
         .tabs button.active {
             background-color: #0056b3;
@@ -154,7 +154,7 @@
                 throw new RuntimeException(e);
             }
         %>
-        <div id="welcome-text"><h4>Hello <%=login.name%>, Your balance ₹<%=balance%></h4></div>
+        <div id="welcome-text"><h4>Hello <%=login.name%>, Your balance ₹<%=String.format("%.2f", balance)%></h4></div>
         <a href="removeAttribute"><button class="logout-button">Logout</button></a>
 
         <div class="tabs">
@@ -171,10 +171,12 @@
                 <input type="hidden" name="source" value="deposit">
 
                 <input type="text" id="deposit-amount" name="deposit" placeholder="Enter amount to deposit"
-                       pattern="^(0\.[1-9]\d?|[1-9]\d*(\.\d{1,2})?)$" title="Enter valid amount" required><br>
+                       pattern="^(?:[1-9]\d{0,3}(?:\.\d{2})?|[1-3]\d{4}(?:\.\d{2})?|40000(?:\.00)?)$"
+                       title="Enter valid amount" required><br>
 
                 <button>Deposit</button>
             </form>
+            <div id="deposit-message"></div>
         </div>
 
         <div id="withdrawal" class="tab-content">
@@ -182,10 +184,12 @@
                 <input type="hidden" name="source" value="withdraw">
 
                 <input type="text" id="withdrawal-amount" name="withdraw" placeholder="Enter Amount to Withdraw "
-                       pattern="^(0\.[1-9]\d?|[1-9]\d*(\.\d{1,2})?)$" title="Enter valid amount" required><br>
+                       pattern="^(?:[1-9]\d{0,3}(?:\.\d{2})?|[1-3]\d{4}(?:\.\d{2})?|40000(?:\.00)?)$"
+                       title="Enter valid amount" required><br>
 
                 <button>Withdraw</button>
             </form>
+            <div id="withdraw-message"></div>
         </div>
 
         <div id="fund-transfer" class="tab-content">
@@ -196,10 +200,12 @@
                        pattern="^[1-9]\d{4}$" title="Enter valid Account number" required><br>
 
                 <input type="text" id="transfer-amount" name="transfer" placeholder="Enter the Amount "
-                       pattern="^0\.[1-9]\d?|[1-9]\d*(\.\d{1,2})?$" title="Enter valid amount" required><br>
+                       pattern="^(?:[1-9]\d{0,3}(?:\.\d{2})?|[1-3]\d{4}(?:\.\d{2})?|40000(?:\.00)?)$"
+                       title="Enter valid amount" required><br>
 
                 <button>Transfer</button>
             </form>
+            <div id="transfer-message"></div>
         </div>
 
         <div id="mini-statement" class="tab-content">
@@ -220,8 +226,8 @@
                     <tr>
                         <td><%= rs.getDate("date_time") %></td>
                         <td><%= rs.getString("description") %></td>
-                        <td>₹ <%= rs.getDouble("amount") %></td>
-                        <td>₹ <%= rs.getDouble("new_balance") %></td>
+                        <td>₹ <%= String.format("\t\t%.2f", rs.getDouble("amount")) %></td>
+                        <td>₹ <%= String.format("\t\t%.2f", rs.getDouble("new_balance")) %></td>
                     </tr>
                     <%
                             }
@@ -238,32 +244,42 @@
         <div id="reset-password" class="tab-content">
             <form action="reset-servlet" method="post">
 
-                <input type="text" id="rp-password" name="password" placeholder="Enter Current Password" required><br>
-                <input type="text" id="rp-new-password" name="new-password" placeholder="Enter New Password" required><br>
-                <input type="text" id="rp-confirm-new-password" name="confirm-new-password" placeholder="Confirm New Password" required><br>
+                <input type="password" id="rp-password" name="password" placeholder="Enter Current Password" required><br>
+                <input type="password" id="rp-new-password" name="new-password" placeholder="Enter New Password" required><br>
+                <input type="password" id="rp-confirm-new-password" name="confirm-new-password" placeholder="Confirm New Password" required><br>
 
                 <button>Reset</button>
 
             </form>
+            <div id="reset-message"></div>
         </div>
 
         <div id="delete-account" class="tab-content">
-            <form action="" method="post">
+            <form action="administration-servlet" method="post">
 
                 <input type="hidden" name="action" value="delete">
 
-                <input type="text" id="delete-account-no" name="account-no" placeholder="Account No" required><br><br>
-
-                <label for="delete-declaration">Enter "delete/account no" to delete</label><br>
+                <label for="delete-declaration">Enter "delete/<%=login.accountNumber%>" to delete</label><br>
                 <input type="text" id="delete-declaration" name="declaration" placeholder='' required><br>
 
                 <button type="submit" class="delete-button">Delete User</button>
 
             </form>
+            <div id="delete-message"></div>
         </div>
 
     </div>
 
+    <%
+        String message = (String) session.getAttribute("message");
+        String color = (String) session.getAttribute("color");
+        String label = (String) session.getAttribute("label");
+
+        session.removeAttribute("label");
+        session.removeAttribute("message");
+        session.removeAttribute("color");
+    %>
+    <div id=""></div>
     <script>
         const tabButtons = document.querySelectorAll('.tab-button');
         const tabContents = document.querySelectorAll('.tab-content');
@@ -327,18 +343,19 @@
             resetTimer();
         };
 
-        <%
-            String status = null;
-            if (session != null) {
-                status = (String) session.getAttribute("status");
-                session.removeAttribute("status"); // Remove error attribute after displaying
-            }
-        %>
-
-        const error = "<%= status != null ? status : "" %>";
+        const error = "<%= message != null ? message : "" %>";
+        const color = "<%= color != null ? color : "#ffffff"%>"
+        const label = "<%= label != null ? label : ""%>";
         if (error) {
-            document.getElementById("error-message").innerHTML = error;
+            document.getElementById(label).innerHTML = error;
+            document.getElementById(label).style.setProperty("color", color);
         }
+
+        function clearMessage() {
+            document.getElementById(label).innerHTML = "";
+        }
+
+        setTimeout(clearMessage, 5 * 1000)
 
     </script>
 </body>
